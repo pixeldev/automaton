@@ -1,9 +1,6 @@
-#include <stdlib.h>
-#include "int_array.h"
-#include "automaton.h"
-#include "transition.h"
+#include "determinist.h"
 
-void exportAutomaton(Automaton* automaton) {
+void determinist_export_automaton(Automaton* automaton) {
     FILE *archivo = fopen("automaton.txt", "w");
     if (archivo == NULL) {
         printf("Error al abrir el archivo para escribir.\n");
@@ -40,15 +37,7 @@ void exportAutomaton(Automaton* automaton) {
     fclose(archivo);
 }
 
-
-
-typedef struct new_state
-{
-    int *states;
-    int size;
-}State;
-
-int* getTransitions(Automaton* automaton, int state, char symb, int* transitions_size) {
+int* determinist_get_transitions(Automaton* automaton, int state, char symb, int* transitions_size) {
     int* transitions = (int*)malloc( (1<<automaton->states.size)*(automaton->alphabet.size)* sizeof(int));
     *transitions_size = 0;
     for (int i = 0; i < automaton->transitions.size; i++) {
@@ -59,7 +48,7 @@ int* getTransitions(Automaton* automaton, int state, char symb, int* transitions
     return transitions;
 }
 
-void initStatesAutomatonDet(IntArray states, State* all_states ) {
+void determinist_init_states_automaton(IntArray states, State* all_states ) {
     all_states = (State*) malloc((1 << states.size)*sizeof(State));
     all_states->size = 1 << states.size;
 
@@ -76,7 +65,7 @@ void initStatesAutomatonDet(IntArray states, State* all_states ) {
     }
 }
 
-void append_states(State* origin, int* new_transitions, int transitions_size){
+void determinist_append_states(State* origin, int* new_transitions, int transitions_size){
     int* new_state = (int*) malloc((origin->size + transitions_size) * sizeof(int));
     for (int i = 0; i < origin->size; i++) {
         new_state[i] = origin->states[i];
@@ -90,7 +79,7 @@ void append_states(State* origin, int* new_transitions, int transitions_size){
     origin->size += transitions_size;
 }
 
-void sort_State(int* states, int size) {
+void determinist_sort_state(int* states, int size) {
     for (int i = 0; i < size - 1; i++) {
         for (int j = i + 1; j < size; j++) {
             if (states[i] > states[j]) {
@@ -102,7 +91,7 @@ void sort_State(int* states, int size) {
     }
 }
 
-int equals(State* a, State* b) {
+int determinist_equals(State* a, State* b) {
     if (a->size != b->size) return 0;
 
     int* state_A = (int*) malloc(a->size * sizeof(int));
@@ -113,8 +102,8 @@ int equals(State* a, State* b) {
         state_B[i] = b->states[i];
     }
 
-    sort_State(state_A, a->size);
-    sort_State(state_B, b->size);
+    determinist_sort_state(state_A, a->size);
+    determinist_sort_state(state_B, b->size);
 
     for (int i = 0; i < a->size; i++) {
         if (state_A[i] != state_B[i]) {
@@ -129,30 +118,30 @@ int equals(State* a, State* b) {
     return 1;
 }
 
-int getIndex(State* origin, State* new_states) {
+int determinist_get_index(State* origin, State* new_states) {
     for (int i = 0; i < new_states->size; i++) {
-        if (sonIguales(origin, &new_states[i])) {
+        if (determinist_equals(origin, &new_states[i])) {
             return i;
         }
     }
     return -1;
 }
 
-void toDeterminist(Automaton* automaton) {
+void determinist_conversion(Automaton* automaton) {
     State *new_states;
     
     Automaton automaton_det;
     initAutomaton(&automaton_det);
 
 
-    initStatesAutomatonDet(automaton->states, new_states);
+    determinist_init_states_automaton(automaton->states, new_states);
 
     int *new_states_automaton = (int*) malloc(new_states->size*sizeof(int));
     for(int i=0; i< new_states->size;i++){
         new_states_automaton[i]= i;
         printf("%d ->", i );
         for(int j=0; j<new_states[i].size;j++){
-            printf(" %d ", new_states[i].states[i]);
+            printf(" %d asd", new_states[i].states[i]);
             if (j < new_states[i].size - 1) printf(", ");
         }
         printf("\n");
@@ -179,10 +168,10 @@ void toDeterminist(Automaton* automaton) {
 
     State aux ;
     aux.states = (int*) malloc(sizeof(int));
-    aux.states = automaton->start_state;
-    aux.size =1;
+    aux.states[0] = automaton->start_state;
+    aux.size = 1;
 
-    automaton_det.start_state = getIndex(&aux, new_states);
+    automaton_det.start_state = determinist_get_index(&aux, new_states);
     
     
 
@@ -201,12 +190,13 @@ void toDeterminist(Automaton* automaton) {
 
             for (int k = 0; k < new_states[i].size; k++) {
                 int transitions_size;
-                int* aux_transitions = getTransitions(automaton, new_states[i].states[k], automaton->alphabet.data[j], &transitions_size);
-                append_States(&aux_2, aux_transitions, transitions_size);
+                int* aux_transitions = determinist_get_transitions(automaton, new_states[i].states[k],
+                                                                   automaton->alphabet.data[j], &transitions_size);
+                determinist_append_states(&aux_2, aux_transitions, transitions_size);
                 free(aux_transitions);
             }
 
-            int output = getIndex(&aux_2, new_states);
+            int output = determinist_get_index(&aux_2, new_states);
             new_transitions[index].from_state=i;
             new_transitions[index].input_symbol = automaton->alphabet.data[j];
             new_transitions[index].from_state = output;
@@ -221,7 +211,7 @@ void toDeterminist(Automaton* automaton) {
     automaton_det.transitions.data = new_transitions;
     automaton_det.transitions.size = index+1;
 
-    exportAutomaton(&automaton_det);
+    determinist_export_automaton(&automaton_det);
 
     
 

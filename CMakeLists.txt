@@ -4,6 +4,7 @@ project(third_practice C)
 set(CMAKE_C_STANDARD 23)
 
 add_executable(third_practice main.c
+        determinist.c
         string.c
         string.h
         int_array.c
@@ -13,4 +14,5 @@ add_executable(third_practice main.c
         transition.c
         transition.h
         automaton.c
-        automaton.h)
+        automaton.h
+        determinist.h)

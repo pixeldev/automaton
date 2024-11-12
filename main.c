@@ -1,5 +1,5 @@
 #include "automaton.h"
-#include "determinist.c"
+#include "determinist.h"
 
 int main() {
     char *string = NULL;
@@ -12,7 +12,7 @@ int main() {
     Automaton automaton = readAutomatonFromFile(string);
     printf("Automata leído correctamente.\n");
 
-    toDeterminist(&automaton);
+    determinist_conversion(&automaton);
     
     return 0;
 }
